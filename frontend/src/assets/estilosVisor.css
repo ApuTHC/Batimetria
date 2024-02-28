@@ -1,0 +1,48 @@
+.leaflet-sidebar-header {
+    background-color: #1F2937;
+}
+
+.leaflet-sidebar-tabs > li.active, .leaflet-sidebar-tabs > ul > li.active {
+    background-color: #1F2937;
+}
+
+.leaflet-controllable-legend-body {
+    height: 100%;
+    max-height: none;
+}
+
+.leaflet-control-basemapsSwitcher {
+    flex-wrap: wrap;
+    justify-content: space-evenly;
+}
+
+.basemapImg {
+    margin: 10px 5px;
+    text-align: center;
+}
+
+.basemapImg div{
+    background-size: 120px 120px;
+    width: 120px;
+    height: 120px;
+}
+
+.basemapImg:hover {
+    transform: scale(1.15);
+    transition: all 0.5s ease;
+}
+
+#buscadorContent {
+    height: 75vh;
+    font-size: 15px;
+}
+
+.glass-location{
+    font-size: 15px;
+    margin-right: 5px;
+}
+
+#buscadorContent .result-item{
+    border-bottom: 1px dotted #0000003b;
+    cursor: pointer;
+}
