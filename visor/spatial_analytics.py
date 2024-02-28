@@ -10,35 +10,9 @@ from rasterio.features import geometry_mask
 import matplotlib.pyplot as plt
 from scipy.signal import savgol_filter
 
-from django.contrib.auth.models import User, Permission, Group
-from visor.models import Embalses, Usuarios, Recursos, RecursosGenerados, Empresas
-from visor.serializers import EmbalsesSerializer, RecursosSerializer, RecursosGeneradosSerializer, EmpresasSerializer
+from recursos.models import Recursos, RecursosGenerados
+from recursos.serializers import RecursosGeneradosSerializer
 from django.db.models import Q
-
-
-def get_embalses(user):
-    us = Usuarios.objects.get(user=user)
-
-    nombre_grupo = 'usuarios_empresas'
-    pertenece_al_grupo = user.groups.filter(name=nombre_grupo).exists()
-    print("grupo: ", pertenece_al_grupo)
-
-    datos = {'embalses': None, 'recursos': None, 'status': False}
-
-    if (pertenece_al_grupo):
-        datos['status'] = True
-
-        embalses = Embalses.objects.filter(id_empresa=us.id_empresa)
-        # embalses = Embalses.objects.all()
-        embalses_serializer = EmbalsesSerializer(embalses, many=True)
-        datos['embalses'] = embalses_serializer.data
-
-        recursos = Recursos.objects.filter(id_empresa=us.id_empresa)
-        recursos_serializer = RecursosSerializer(recursos, many=True)
-        datos['recursos'] = recursos_serializer.data
-    else:
-        pass
-    return datos
 
 
 def eval_embalse(infoJSON, user):

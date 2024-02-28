@@ -5,6 +5,7 @@ from django.contrib.auth.models import (
     PermissionsMixin,
     UserManager,
 )
+from empresas.models import Empresas
 
 
 class CustomUserManager(UserManager):
@@ -33,7 +34,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     avatar = models.ImageField(default="avatar.png")
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
-
+    id_empresa = models.ForeignKey(Empresas, on_delete=models.CASCADE, null=True)
+    telefono = models.CharField(max_length=100, null=True)
+    cargo = models.CharField(max_length=100, null=True)
+    tipo = models.CharField(max_length=100, null=True)
     date_joined = models.DateTimeField(default=timezone.now)
 
     objects = CustomUserManager()

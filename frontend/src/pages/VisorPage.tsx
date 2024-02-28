@@ -1,4 +1,3 @@
-import ReactDOM from 'react-dom';
 import {useEffect} from 'react';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
@@ -23,6 +22,18 @@ import '../assets/leaflet.fusesearch.js'
 
 
 import '../assets/estilosVisor.css'
+import {toast} from "react-hot-toast";
+import {useQuery} from "@tanstack/react-query";
+import {get_embalses} from "../api/proyectos.ts";
+import {get_recursos} from '../api/recursos.ts';
+import {Embalse} from "../Interfaces.ts";
+import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap/dist/js/bootstrap.bundle.js';
+
+import "https://code.jquery.com/jquery-3.7.1.min.js"
+import "https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.min.js"
+import 'react-bootstrap'
+
 
 const VisorPage = () => {
 
@@ -196,6 +207,25 @@ const VisorPage = () => {
         }
     }, []);
 
+
+    const embalses = useQuery({
+        queryKey: ["embalses"],
+        queryFn: get_embalses,
+    });
+
+    const recursos = useQuery({
+        queryKey: ["recursos"],
+        queryFn: get_recursos,
+    });
+
+    console.log(embalses.data)
+    console.log(recursos.data)
+
+    if (embalses.data !== undefined && recursos.data !== undefined) {
+
+    }
+
+
     return (
         <div>
             <div id="sidebar" className="leaflet-sidebar collapsed">
@@ -252,7 +282,56 @@ const VisorPage = () => {
                         <p className="h5">Seleccione el embalse en el mapa o por medio del buscador.</p>
 
                         <div className="h-100 w-100">
-                            <div className="tab-content" id="embalsesContent"></div>
+                            <div className="tab-content" id="embalsesContent">
+                                {embalses.data && embalses.data !== undefined &&
+                                    embalses.data.map((embalse: Embalse) => (
+
+                                        // <p>{embalse.nombre}</p>
+
+                                        <div className="accordion" id={`navEmbalse-${embalse.id}`}>
+                                            <div className="card">
+                                                <div className="card-header collapsed"
+                                                     id={`embalse-${embalse.id}-header`} data-toggle="collapse"
+                                                     data-target={`embalse-${embalse.id}-body`} aria-expanded="true"
+                                                     aria-controls={`embalse-${embalse.id}-body`}
+                                                     // onClick="CentrarEmbalse(id)"
+                                                >
+                                                    <h5 className="mb-0 text-center"><b>Embalse {embalse.nombre}</b></h5>
+                                                </div>
+                                                <div id={`embalse-${embalse.id}-body`} className="collapse body-emb"
+                                                     aria-labelledby={`embalse-${embalse.id}-header`}>
+                                                    <div className="card-body" id={`embalse-${embalse.id}-content`}>
+                                                        <div className="h-100 w-100">
+                                                            <nav>
+                                                                <div className="nav nav-tabs justify-content-center"
+                                                                     id={`nav-tab-${embalse.id}`} role="tablist">
+                                                                    <button className="nav-link" id={`nav-bati-tab-${embalse.id}`} data-toggle="tab" data-target={`nav-bati-pane-${embalse.id}`} type="button" role="tab" aria-controls={`nav-bati-pane-${embalse.id}`} aria-selected="true"><b>Batimetrías</b></button>
+                                                                    <button className="nav-link" id={`nav-orto-tab-${embalse.id}`} data-toggle="tab" data-target={`nav-orto-pane-${embalse.id}`} type="button" role="tab" aria-controls={`nav-orto-pane-${embalse.id}`} aria-selected="true"><b>Ortofotos</b></button>
+                                                                    <button className="nav-link" id={`nav-perfil-tab-${embalse.id}`} data-toggle="tab" data-target={`nav-perfil-pane-${embalse.id}`} type="button" role="tab" aria-controls={`nav-perfil-pane-${embalse.id}`} aria-selected="true"><b>Perfiles</b></button>
+                                                                </div>
+                                                            </nav>
+                                                            <div className="tab-content"
+                                                                 id={`nav-tabContent-${embalse.id}`}>
+
+                                                                <div className="tab-pane fade show active" id={`nav-bati-pane-${embalse.id}`} role="tabpanel" aria-labelledby={`nav-bati-tab-${embalse.id}`}>
+                                                                    <div className="accordion" id={`nav-bati-${embalse.id}`}></div>
+                                                                </div>
+                                                                <div className="tab-pane fade" id={`nav-orto-pane-${embalse.id}`} role="tabpanel" aria-labelledby={`nav-orto-tab-${embalse.id}`}>
+                                                                    <div className="accordion" id={`nav-orto-${embalse.id}`}></div>
+                                                                </div>
+                                                                <div className="tab-pane fade" id={`nav-perfil-pane-${embalse.id}`} role="tabpanel" aria-labelledby={`nav-perfil-tab-${embalse.id}`}>
+                                                                    <div className="accordion" id={`nav-perfil-${embalse.id}`}></div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+
+                                    ))}
+                            </div>
                         </div>
                     </div>
                     <div className="leaflet-sidebar-pane" id="batimetria">
