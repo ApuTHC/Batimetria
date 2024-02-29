@@ -1,6 +1,6 @@
 import {useEffect} from 'react';
 import 'leaflet/dist/leaflet.css';
-import L from 'leaflet';
+import * as L from "leaflet";
 import 'leaflet-sidebar-v2/css/leaflet-sidebar.css';
 import 'leaflet-sidebar-v2';
 import {FontAwesomeIcon} from '@fortawesome/react-fontawesome';
@@ -19,7 +19,7 @@ import '../assets/L.switchBasemap.js';
 import '../assets/L.switchBasemap.css'
 import '../assets/leaflet.fusesearch.css'
 import '../assets/leaflet.fusesearch.js'
-import 'leaflet.wms'
+import * as WMS from "leaflet.wms";
 // import { wms } from  '../assets/leaflet.wms.js'
 
 
@@ -28,6 +28,7 @@ import {toast} from "react-hot-toast";
 
 import {Accordion, Tab, Nav, Form} from 'react-bootstrap';
 import {Embalse, Recurso} from "../Interfaces.ts";
+import {Source} from "leaflet.wms";
 
 
 interface Props {
@@ -41,10 +42,11 @@ const Visor = ({recursos, embalses}: Props) => {
     console.log(recursos)
 
     let mapInitialized = false;
+    let map : L.Map;
 
     useEffect(() => {
         if (!mapInitialized) {
-            const map = L.map('map').setView([6.24, -75.57], 13);
+            map = L.map('map').setView([6.24, -75.57], 11);
             const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
             mapInitialized = true;
 
@@ -90,38 +92,6 @@ const Visor = ({recursos, embalses}: Props) => {
             $(searchCtrl._container).remove();
             $(".content .header .close").remove();
 
-
-            // const MySource = wms.Source.extend({
-            //     'showFeatureInfo': function (latlng, infos) {
-            //         if (!this._map) {
-            //             return;
-            //         }
-            //         // Se abre el popup en la posición del elemento, mostrando los datos del elemento
-            //         this._map.openPopup(infos, latlng);
-            //     }
-            // });
-            // const layerWMS = new MySource("http://localhost:8080/geoserver/prueba/wms", {
-            //     attribution: "",
-            //     useCors: false,
-            //     opacity: 1,
-            //     maxZoom: 25,
-            //     format: 'image/png',
-            //     layers: "Batimetría Calderas Diciembre 2019",
-            //     transparent: true,
-            //     version: '1.3.0',
-            //     info_format: 'text/html',
-            //     env: "nn"
-            // });
-            //
-            // const capa =  layerWMS.getLayer("prueba:MDT_Diciembre_2019").addTo(map);
-            // const legend = "http://localhost:8080/geoserver/prueba/wms" + "?REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&WIDTH=20&HEIGHT=20&LAYER=" + "prueba:MDT_Diciembre_2019";
-
-            // L.tileLayer.wms("http://localhost:8080/geoserver/prueba/wms", {
-            //     layers: "prueba:MDT_Diciembre_2019",
-            //     format: 'image/png',
-            //     transparent: true,
-            // }).addTo(map);
-
             const embalsesLayer = L.layerGroup();
             for (let i = 0; embalses.length > i; i++) {
                 const element = embalses[i];
@@ -151,9 +121,45 @@ const Visor = ({recursos, embalses}: Props) => {
     console.log(embalses)
     console.log(recursos)
 
+    let obj_capas_recursos : {[key: string]: [any, string, boolean] } = {};
+
     const handleRecursoChange = (event: React.ChangeEvent<HTMLInputElement>, resourceId: number) => {
         const isChecked = event.target.checked;
         console.log(`El recurso con ID ${resourceId} fue cambiado. Está ${isChecked ? 'seleccionado' : 'deseleccionado'}.`);
+        if (isChecked){
+            if (obj_capas_recursos[resourceId] === undefined){
+                console.log(`El recurso con ID ${resourceId} no existe en el mapa.`);
+                const idAux = resourceId - 1;
+                console.log(recursos[idAux])
+                const layerWMS = WMS.source(recursos[idAux].ruta, {
+                    attribution: "",
+                    useCors: false,
+                    opacity: 1,
+                    maxZoom: 25,
+                    format: 'image/png',
+                    layers: recursos[idAux].nombre,
+                    transparent: true,
+                    version: '1.3.0',
+                    info_format: 'text/html',
+                    env: "nn"
+                });
+
+                const capa =  layerWMS.getLayer(recursos[idAux].capa).addTo(map);
+                const legend = "http://localhost:8080/geoserver/prueba/wms" + "?REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&WIDTH=20&HEIGHT=20&LAYER=" + "prueba:MDT_Diciembre_2019";
+                $("#legend_"+resourceId).append('<div className="legend_capa"><img src="'+ legend +'" alt="Leyenda" /></div>');
+                obj_capas_recursos[resourceId] = [capa , legend, true];
+            }
+            else{
+                map.addLayer(obj_capas_recursos[resourceId][0]);
+                $('#legend_'+resourceId).append('<div className="legend_capa"><img src="'+ obj_capas_recursos[resourceId][1] +'" alt="Leyenda" /></div>');
+                obj_capas_recursos[resourceId][2] = true;
+            }
+        }
+        else {
+            map.removeLayer(obj_capas_recursos[resourceId][0]);
+            $('#legend_'+resourceId).empty();
+            obj_capas_recursos[resourceId][2] = false;
+        }
         // toggleDatosProyectos(resourceId, isChecked);
     };
 
@@ -161,6 +167,12 @@ const Visor = ({recursos, embalses}: Props) => {
         const value = event.target.value;
         console.log(`El recurso con ID ${resourceId} cambió su transparencia a ${value}.`);
         $(`#valTransp_${resourceId}`).text(value);
+        var opacidad = (100 - parseInt(value)) / 100;
+        if (obj_capas_recursos[resourceId] !== undefined){
+            if (obj_capas_recursos[resourceId][2]) {
+                obj_capas_recursos[resourceId][0].setOpacity(opacidad);
+            }
+        }
     };
 
 
@@ -266,7 +278,7 @@ const Visor = ({recursos, embalses}: Props) => {
                                                                                     </div>
                                                                                     <div
                                                                                         className="d-block content-legends"
-                                                                                        id={`content-legend_proy_${recurso.id}`}></div>
+                                                                                        id={`legend_${recurso.id}`}></div>
                                                                                 </div>
 
                                                                             ) : null
@@ -301,7 +313,7 @@ const Visor = ({recursos, embalses}: Props) => {
                                                                                     </div>
                                                                                     <div
                                                                                         className="d-block content-legends"
-                                                                                        id={`content-legend_proy_${recurso.id}`}></div>
+                                                                                        id={`legend_${recurso.id}`}></div>
                                                                                 </div>
 
                                                                             ) : null
