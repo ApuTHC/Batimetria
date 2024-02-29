@@ -1,5 +1,8 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import {PrivateRoute, AdminPrivateRoute} from "./components/PrivateRoute.tsx";
+
+import 'bootstrap/dist/css/bootstrap.min.css';
+
 import Layout from "./components/Layout.tsx";
 import HomePage from "./pages/HomePage.tsx";
 import LoginPage from "./pages/LoginPage.tsx";

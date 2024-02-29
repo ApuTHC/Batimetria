@@ -18,7 +18,10 @@
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+
+    "allowJs": true, // Permite la inclusión de archivos JavaScript junto con los archivos TypeScript
+    "checkJs": true // Habilita la verificación de errores en archivos JavaScript
   },
   "include": ["src"],
   "references": [{ "path": "./tsconfig.node.json" }]
