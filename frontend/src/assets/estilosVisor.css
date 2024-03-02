@@ -1,3 +1,7 @@
+body{
+    overflow: hidden;
+}
+
 .leaflet-sidebar-header {
     background-color: #1F2937;
 }
@@ -45,4 +49,16 @@
 #buscadorContent .result-item{
     border-bottom: 1px dotted #0000003b;
     cursor: pointer;
+}
+
+.leaflet-sidebar-pane{
+    padding: 10px 10px 10px 20px;
+}
+
+.accordion-body{
+    padding: 0.5rem 0.8rem;
+}
+
+.tab-content{
+    margin-top: 15px;
 }

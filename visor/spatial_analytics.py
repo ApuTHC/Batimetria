@@ -11,32 +11,29 @@ import matplotlib.pyplot as plt
 from scipy.signal import savgol_filter
 
 from recursos.models import Recursos, RecursosGenerados
-from recursos.serializers import RecursosGeneradosSerializer
 from django.db.models import Q
 
+from rasterio.mask import mask
+from rasterio.coords import BoundingBox
 
-def eval_embalse(infoJSON, user):
-    proyant_id = infoJSON.get('proyant')
-    proydes_id = infoJSON.get('proydes')
+from shapely.geometry import box
+
+
+def eval_embalse(data):
+    proyant_id = data.get('id_1')
+    proydes_id = data.get('id_2')
 
     recursoAnt = Recursos.objects.get(id=proyant_id)
     recurso = RecursosGenerados.objects.filter(Q(id_recurso_1=proyant_id) & Q(id_recurso_2=proydes_id))
     print(recurso)
     if recurso.exists():
-        recurso = recurso[0]
         response = {
             "existe": True,
-            "id": recurso.id,
-            "id_embalse": recurso.id_embalse_id,
-            'env': recurso.env,
-            'nombre': recurso.nombre,
-            'capa': recurso.capa,
-            'nombre_file': recurso.nombre_file,
         }
         return response
     else:
-        pathRec = './visor/static/Geodata/Proyectos/'
-        pathRes = './visor/static/Geodata/Proyectos/Calderas/Resultados/'
+        pathRec = './dist/static/Geodata/Proyectos/'
+        pathRes = './dist/static/Geodata/Proyectos/Calderas/Resultados/'
 
         proyant = Recursos.objects.get(id=proyant_id).nombre
         proydes = Recursos.objects.get(id=proydes_id).nombre
@@ -46,15 +43,7 @@ def eval_embalse(infoJSON, user):
             'Batimetria ', '').replace('Batimetría ', '').replace(' ', '_') + '.tif'
 
         pat_result = pathRes + name_result
-        calculado = False
-        vMax = 0
-        vMin = 0
-        env = ""
 
-        if os.path.exists(pat_result):
-            calculado = True
-
-        # if not calculado:
         print("calcula")
         proyant = Recursos.objects.get(id=proyant_id).nombre_file
         proydes = Recursos.objects.get(id=proydes_id).nombre_file
@@ -63,11 +52,13 @@ def eval_embalse(infoJSON, user):
 
         with rasterio.open(path_src1) as src1, rasterio.open(path_src2) as src2:
             # Lee los datos de los rasters
+
             data1 = src1.read(1)
             data2 = src2.read(1)
 
             # Calcula la diferencia entre los rasters
             diferencia_data = data2 - data1
+            diferencia_data = np.where(diferencia_data < -1000, 0, diferencia_data)
             diferencia_data = np.where(diferencia_data > 1000, 0, diferencia_data)
             vMax = diferencia_data.max()
             vMin = diferencia_data.min()
@@ -87,8 +78,10 @@ def eval_embalse(infoJSON, user):
         geo.create_coveragestore(layer_name=nombre_layer, path=pat_result, workspace='prueba')
         nombre_layer_wms = 'prueba:' + nombre_layer
         geo.publish_style(layer_name=nombre_layer, style_name='estilos_erosion_depo', workspace='prueba')
+        # geo.publish_style(layer_name=nombre_layer, style_name='raster', workspace='prueba')
 
-        recursoGenerado_data = {
+        recurso_generado_obj = {
+            "existe": False,
             "id_empresa": recursoAnt.id_empresa_id,
             "id_embalse": recursoAnt.id_embalse_id,
             "id_tipo_recurso": 1,
@@ -101,20 +94,7 @@ def eval_embalse(infoJSON, user):
             "nombre_file": name_result,
         }
 
-        recursoGenerado_serializer = RecursosGeneradosSerializer(data=recursoGenerado_data)
-        if recursoGenerado_serializer.is_valid():
-            ids = recursoGenerado_serializer.save()
-
-        response = {
-            "existe": False,
-            "id": ids.id,
-            "id_embalse": recursoAnt.id_embalse_id,
-            'env': env,
-            'nombre': nombre_layer,
-            'capa': nombre_layer_wms,
-            'nombre_file': name_result,
-        }
-        return response
+        return recurso_generado_obj
 
 
 def eval_perfil(infoJSON):

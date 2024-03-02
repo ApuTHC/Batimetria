@@ -9,7 +9,6 @@ import {
     faMap,
     faMagnifyingGlassLocation,
     faLayerGroup,
-    faCalculator,
     faCaretLeft
 } from '@fortawesome/free-solid-svg-icons';
 import 'esri-leaflet';
@@ -20,29 +19,33 @@ import '../assets/L.switchBasemap.css'
 import '../assets/leaflet.fusesearch.css'
 import '../assets/leaflet.fusesearch.js'
 import * as WMS from "leaflet.wms";
-// import { wms } from  '../assets/leaflet.wms.js'
-
 
 import '../assets/estilosVisor.css'
 import {toast} from "react-hot-toast";
 
-import {Accordion, Tab, Nav, Form} from 'react-bootstrap';
+import {Accordion, Tab, Nav, Form, Button} from 'react-bootstrap';
 import {Embalse, Recurso} from "../Interfaces.ts";
-import {Source} from "leaflet.wms";
+import {useMutation} from "@tanstack/react-query";
+import {eval_embalse} from "../api/visor.ts";
+
 
 
 interface Props {
     recursos: []
     embalses: []
+    recursos_gen :[]
 }
 
-const Visor = ({recursos, embalses}: Props) => {
+let map: L.Map;
+
+const Visor = ({recursos, embalses, recursos_gen}: Props) => {
 
     console.log(embalses)
     console.log(recursos)
+    console.log(recursos_gen)
 
     let mapInitialized = false;
-    let map : L.Map;
+    // let map: L.Map;
 
     useEffect(() => {
         if (!mapInitialized) {
@@ -112,67 +115,107 @@ const Visor = ({recursos, embalses}: Props) => {
                     .addTo(embalsesLayer)
             }
             embalsesLayer.addTo(map);
-            console.log(embalsesLayer.toGeoJSON());
-            // searchCtrl.indexFeatures(embalsesLayer.toGeoJSON(), ['nombre']);
+            searchCtrl.indexFeatures(embalsesLayer.toGeoJSON(), ['nombre']);
 
         }
     }, []);
 
-    console.log(embalses)
-    console.log(recursos)
 
-    let obj_capas_recursos : {[key: string]: [any, string, boolean] } = {};
+    let obj_capas_recursos: { [key: string]: [any, string, boolean] } = {};
+    console.log(obj_capas_recursos)
 
-    const handleRecursoChange = (event: React.ChangeEvent<HTMLInputElement>, resourceId: number) => {
+    const handleRecursoChange = (event: React.ChangeEvent<HTMLInputElement>, resourceId: number, isResource: boolean) => {
+        let recursos1: Recurso[] = recursos;
+        let idResAux : any;
+        if(isResource){
+            idResAux = resourceId;
+        }else{
+            idResAux = resourceId+'_gen';
+            recursos1 = recursos_gen;
+        }
+        console.log(recursos1)
+        console.log(idResAux)
+        console.log(resourceId)
+
         const isChecked = event.target.checked;
-        console.log(`El recurso con ID ${resourceId} fue cambiado. Está ${isChecked ? 'seleccionado' : 'deseleccionado'}.`);
-        if (isChecked){
-            if (obj_capas_recursos[resourceId] === undefined){
-                console.log(`El recurso con ID ${resourceId} no existe en el mapa.`);
-                const idAux = resourceId - 1;
-                console.log(recursos[idAux])
-                const layerWMS = WMS.source(recursos[idAux].ruta, {
+        console.log(`El recurso con ID ${idResAux} fue cambiado. Está ${isChecked ? 'seleccionado' : 'deseleccionado'}.`);
+        if (isChecked) {
+            if (obj_capas_recursos[idResAux] === undefined) {
+                console.log(`El recurso con ID ${idResAux} no existe en el mapa.`);
+                const true_resource = recursos1.find(objeto => objeto.id === resourceId);
+
+                const layerWMS = WMS.source(true_resource.ruta, {
                     attribution: "",
                     useCors: false,
                     opacity: 1,
                     maxZoom: 25,
                     format: 'image/png',
-                    layers: recursos[idAux].nombre,
+                    layers: true_resource.nombre,
                     transparent: true,
                     version: '1.3.0',
                     info_format: 'text/html',
                     env: "nn"
                 });
 
-                const capa =  layerWMS.getLayer(recursos[idAux].capa).addTo(map);
+                const capa = layerWMS.getLayer(true_resource.capa).addTo(map);
                 const legend = "http://localhost:8080/geoserver/prueba/wms" + "?REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&WIDTH=20&HEIGHT=20&LAYER=" + "prueba:MDT_Diciembre_2019";
-                $("#legend_"+resourceId).append('<div className="legend_capa"><img src="'+ legend +'" alt="Leyenda" /></div>');
-                obj_capas_recursos[resourceId] = [capa , legend, true];
+                $("#legend_" + idResAux).append('<div className="legend_capa"><img src="' + legend + '" alt="Leyenda" /></div>');
+                obj_capas_recursos[idResAux] = [capa, legend, true];
+            } else {
+                map.addLayer(obj_capas_recursos[idResAux][0]);
+                $('#legend_' + idResAux).append('<div className="legend_capa"><img src="' + obj_capas_recursos[idResAux][1] + '" alt="Leyenda" /></div>');
+                obj_capas_recursos[idResAux][2] = true;
             }
-            else{
-                map.addLayer(obj_capas_recursos[resourceId][0]);
-                $('#legend_'+resourceId).append('<div className="legend_capa"><img src="'+ obj_capas_recursos[resourceId][1] +'" alt="Leyenda" /></div>');
-                obj_capas_recursos[resourceId][2] = true;
-            }
-        }
-        else {
-            map.removeLayer(obj_capas_recursos[resourceId][0]);
-            $('#legend_'+resourceId).empty();
-            obj_capas_recursos[resourceId][2] = false;
+        } else {
+            map.removeLayer(obj_capas_recursos[idResAux][0]);
+            $('#legend_' + idResAux).empty();
+            obj_capas_recursos[idResAux][2] = false;
         }
         // toggleDatosProyectos(resourceId, isChecked);
     };
 
-    const handleSliderChange = (event: React.ChangeEvent<HTMLInputElement>, resourceId: number) => {
+    const handleSliderChange = (event: React.ChangeEvent<HTMLInputElement>, resourceId: number, isResource: boolean) => {
+
+        let idResAux : any;
+        if(isResource){
+            idResAux = resourceId;
+        }else{
+            idResAux = resourceId+'_gen';
+        }
+
         const value = event.target.value;
-        console.log(`El recurso con ID ${resourceId} cambió su transparencia a ${value}.`);
-        $(`#valTransp_${resourceId}`).text(value);
+        console.log(`El recurso con ID ${idResAux} cambió su transparencia a ${value}.`);
+        $(`#valTransp_${idResAux}`).text(value);
         var opacidad = (100 - parseInt(value)) / 100;
-        if (obj_capas_recursos[resourceId] !== undefined){
-            if (obj_capas_recursos[resourceId][2]) {
-                obj_capas_recursos[resourceId][0].setOpacity(opacidad);
+        if (obj_capas_recursos[idResAux] !== undefined) {
+            if (obj_capas_recursos[idResAux][2]) {
+                obj_capas_recursos[idResAux][0].setOpacity(opacidad);
             }
         }
+    };
+
+    const eval_embalse_Mutation = useMutation({
+        mutationFn: () => eval_embalse(id_1, id_2),
+        onSuccess: (response) => {
+            console.log(response.data)
+            recursos_gen.push(response.data)
+            toast.success("Calculo de Diferencia Exitoso!");
+        },
+        onError: () => {
+            toast.error("Ocurrió un error, Volver a intentar");
+        }
+    })
+    let id_1 : number = 0;
+    let id_2 : number = 0;
+
+    const handleDiferencia = (event: React.ChangeEvent<HTMLInputElement>, embalseId: number) => {
+        event.preventDefault()
+        console.log(embalseId)
+        console.log($("#select-1_" + embalseId).val())
+        console.log($("#select-2_" + embalseId).val())
+        id_1 = parseInt($("#select-1_" + embalseId).val());
+        id_2 = parseInt($("#select-2_" + embalseId).val());
+        eval_embalse_Mutation.mutate()
     };
 
 
@@ -181,17 +224,19 @@ const Visor = ({recursos, embalses}: Props) => {
             <div id="sidebar" className="leaflet-sidebar collapsed">
                 <div className="leaflet-sidebar-tabs">
                     <ul role="tablist">
-                        <li><a href="#home" role="tab" title="Información del Visor"><FontAwesomeIcon
-                            icon={faCircleInfo} className="text-xl"/></a></li>
-                        <li><a href="#basemap" role="tab" title="Selección Mapa Base"><FontAwesomeIcon icon={faMap}
+                        <li>
+                            <a href="#home" role="tab" title="Información del Visor"><FontAwesomeIcon
+                                icon={faCircleInfo} className="text-xl"/></a></li>
+                        <li>
+                            <a href="#basemap" role="tab" title="Selección Mapa Base"><FontAwesomeIcon icon={faMap}
                                                                                                        className="text-xl"/></a>
                         </li>
-                        <li><a href="#buscador" role="tab" title="Buscador"><FontAwesomeIcon
-                            icon={faMagnifyingGlassLocation} className="text-xl"/></a></li>
-                        <li><a href="#capas" role="tab" title="Selección de Información Disponibles"><FontAwesomeIcon
-                            icon={faLayerGroup} className="text-xl"/></a></li>
-                        <li><a href="#batimetria" role="tab" title="Batimetría"><FontAwesomeIcon icon={faCalculator}
-                                                                                                 className="text-xl"/></a>
+                        <li>
+                            <a href="#buscador" role="tab" title="Buscador"><FontAwesomeIcon
+                                icon={faMagnifyingGlassLocation} className="text-xl"/></a></li>
+                        <li>
+                            <a href="#capas" role="tab" title="Selección de Información Disponibles"><FontAwesomeIcon
+                                icon={faLayerGroup} className="text-xl"/></a>
                         </li>
                     </ul>
                 </div>
@@ -248,8 +293,10 @@ const Visor = ({recursos, embalses}: Props) => {
                                                             <Nav.Link eventKey="bati"><b>Batimetrías</b></Nav.Link>
                                                             <Nav.Link eventKey="orto"><b>Ortofotos</b></Nav.Link>
                                                             <Nav.Link eventKey="perfil"><b>Perfiles</b></Nav.Link>
+                                                            <Nav.Link eventKey="calcular"><b>Calcular</b></Nav.Link>
                                                         </Nav>
                                                         <Tab.Content>
+
                                                             <Tab.Pane eventKey="bati">
                                                                 <div>
                                                                     {recursos && recursos !== undefined &&
@@ -260,7 +307,7 @@ const Visor = ({recursos, embalses}: Props) => {
                                                                                     <label className="switch">
                                                                                         <input type="checkbox"
                                                                                                id={`capa_proy_${recurso.id}`}
-                                                                                               onChange={(e) => handleRecursoChange(e, recurso.id)}
+                                                                                               onChange={(e) => handleRecursoChange(e, recurso.id, true)}
                                                                                         />
                                                                                         <span
                                                                                             className="slider round"></span>
@@ -272,8 +319,7 @@ const Visor = ({recursos, embalses}: Props) => {
                                                                                             id={`valTransp_${recurso.id}`}>0</span>%</Form.Label>
                                                                                         <Form.Range min="0" max="100"
                                                                                                     defaultValue="0"
-                                                                                                    id={`transp-file_proy_${recurso.id}`}
-                                                                                                    onChange={(e) => handleSliderChange(e, recurso.id)}
+                                                                                                    onChange={(e) => handleSliderChange(e, recurso.id, true)}
                                                                                         />
                                                                                     </div>
                                                                                     <div
@@ -285,6 +331,7 @@ const Visor = ({recursos, embalses}: Props) => {
                                                                         ))}
                                                                 </div>
                                                             </Tab.Pane>
+
                                                             <Tab.Pane eventKey="orto">
                                                                 <div>
                                                                     {recursos && recursos !== undefined &&
@@ -295,7 +342,7 @@ const Visor = ({recursos, embalses}: Props) => {
                                                                                     <label className="switch">
                                                                                         <input type="checkbox"
                                                                                                id={`capa_proy_${recurso.id}`}
-                                                                                               onChange={(e) => handleRecursoChange(e, recurso.id)}
+                                                                                               onChange={(e) => handleRecursoChange(e, recurso.id, true)}
                                                                                         />
                                                                                         <span
                                                                                             className="slider round"></span>
@@ -307,8 +354,7 @@ const Visor = ({recursos, embalses}: Props) => {
                                                                                             id={`valTransp_${recurso.id}`}>0</span>%</Form.Label>
                                                                                         <Form.Range min="0" max="100"
                                                                                                     defaultValue="0"
-                                                                                                    id={`transp-file_proy_${recurso.id}`}
-                                                                                                    onChange={(e) => handleSliderChange(e, recurso.id)}
+                                                                                                    onChange={(e) => handleSliderChange(e, recurso.id, true)}
                                                                                         />
                                                                                     </div>
                                                                                     <div
@@ -320,8 +366,101 @@ const Visor = ({recursos, embalses}: Props) => {
                                                                         ))}
                                                                 </div>
                                                             </Tab.Pane>
+
                                                             <Tab.Pane eventKey="perfil">
                                                                 <div id={`nav-perfil-${embalse.id}`}>perfil</div>
+                                                            </Tab.Pane>
+
+                                                            <Tab.Pane eventKey="calcular">
+                                                                <Tab.Container id={`tabs-calcular-${embalse.id}`}
+                                                                               defaultActiveKey="diferencia">
+                                                                    <Nav variant="tabs">
+                                                                        <Nav.Link eventKey="diferencia"><b>Diferencia de
+                                                                            Altura</b></Nav.Link>
+                                                                        <Nav.Link eventKey="volumen"><b>Cota -
+                                                                            Volumen</b></Nav.Link>
+                                                                    </Nav>
+                                                                    <Tab.Content>
+                                                                        <Tab.Pane eventKey="diferencia">
+                                                                            <Form
+                                                                                onSubmit={(e) => handleDiferencia(e, embalse.id)}
+                                                                            >
+                                                                                <Form.Group>
+                                                                                    <Form.Label>Proyecto
+                                                                                        Anterior</Form.Label>
+                                                                                    <Form.Select
+                                                                                        id={`select-1_${embalse.id}`}>
+                                                                                        {recursos && recursos !== undefined &&
+                                                                                            recursos.map((recurso: Recurso) => (
+                                                                                                recurso.id_tipo_recurso === 1 && recurso.id_embalse === embalse.id ? (
+                                                                                                    <option
+                                                                                                        value={recurso.id}>{recurso.nombre}</option>
+                                                                                                ) : null
+                                                                                            ))}
+                                                                                    </Form.Select>
+                                                                                </Form.Group>
+                                                                                <Form.Group>
+                                                                                    <Form.Label>Proyecto
+                                                                                        Posterior</Form.Label>
+                                                                                    <Form.Select
+                                                                                        id={`select-2_${embalse.id}`}>
+                                                                                        {recursos && recursos !== undefined &&
+                                                                                            recursos.map((recurso: Recurso) => (
+                                                                                                recurso.id_tipo_recurso === 1 && recurso.id_embalse === embalse.id ? (
+                                                                                                    <option
+                                                                                                        value={recurso.id}>{recurso.nombre}</option>
+                                                                                                ) : null
+                                                                                            ))}
+                                                                                    </Form.Select>
+                                                                                </Form.Group>
+                                                                                <Button type="submit">Calcular
+                                                                                    Diferencia</Button>
+                                                                            </Form>
+                                                                            <div>
+                                                                                {recursos_gen && recursos_gen !== undefined &&
+                                                                                    recursos_gen.map((recurso: Recurso) => (
+                                                                                        recurso.id_tipo_recurso === 1 && recurso.id_embalse === embalse.id ? (
+
+                                                                                            <div
+                                                                                                className="content-file">
+                                                                                                <label
+                                                                                                    className="switch">
+                                                                                                    <input
+                                                                                                        type="checkbox"
+                                                                                                        id={`capa_proy_${recurso.id}_gen`}
+                                                                                                        onChange={(e) => handleRecursoChange(e, recurso.id, false)}
+                                                                                                    />
+                                                                                                    <span
+                                                                                                        className="slider round"></span>
+                                                                                                </label>
+                                                                                                <a>{recurso.nombre}</a>
+                                                                                                <div
+                                                                                                    className="d-block"></div>
+                                                                                                <div>
+                                                                                                    <Form.Label>Transparencia: <span
+                                                                                                        id={`valTransp_${recurso.id}_gen`}>0</span>%</Form.Label>
+                                                                                                    <Form.Range min="0"
+                                                                                                                max="100"
+                                                                                                                defaultValue="0"
+                                                                                                                onChange={(e) => handleSliderChange(e, recurso.id, false)}
+                                                                                                    />
+                                                                                                </div>
+                                                                                                <div
+                                                                                                    className="d-block content-legends"
+                                                                                                    id={`legend_${recurso.id}_gen`}></div>
+                                                                                            </div>
+
+                                                                                        ) : null
+                                                                                    ))}
+                                                                            </div>
+                                                                        </Tab.Pane>
+                                                                        <Tab.Pane eventKey="volumen">
+                                                                            <div
+                                                                                id={`nav-volumen-${embalse.id}`}>volumen
+                                                                            </div>
+                                                                        </Tab.Pane>
+                                                                    </Tab.Content>
+                                                                </Tab.Container>
                                                             </Tab.Pane>
                                                         </Tab.Content>
                                                     </Tab.Container>
@@ -330,18 +469,6 @@ const Visor = ({recursos, embalses}: Props) => {
                                         ))}
                                 </Accordion>
                             </div>
-                        </div>
-                    </div>
-                    <div className="leaflet-sidebar-pane" id="batimetria">
-                        <h1 className="leaflet-sidebar-header">
-                            Visor Proyectos
-                            <span className="leaflet-sidebar-close"><FontAwesomeIcon icon={faCaretLeft}/></span>
-                        </h1>
-                        <h2>Embalse Calderas</h2>
-                        <div id="content-proyectos" className="container-fluid tab-content"></div>
-
-                        <div id="content-resultados" className="container-fluid tab-content">
-
                         </div>
                     </div>
                 </div>
