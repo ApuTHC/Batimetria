@@ -67,6 +67,22 @@ class RecursosGenerados(models.Model):
         self.published_date = timezone.now()
         self.save()
 
-    def __int__(self):
-        return self.id
 
+class Perfiles(models.Model):
+    id = models.AutoField(primary_key=True)
+    id_empresa = models.ForeignKey(Empresas, on_delete=models.CASCADE, null=True)
+    id_embalse = models.ForeignKey(Embalses, on_delete=models.CASCADE)
+    nombre = models.CharField(max_length=100)
+    proyectos = models.CharField(max_length=100)
+    ukey = models.CharField(max_length=100)
+    img = models.CharField(max_length=100)
+    geojson = models.TextField(blank=True, null=True)
+    nombres = models.TextField()
+    dems = models.TextField()
+    ids = models.TextField()
+
+    published_date = models.DateTimeField(blank=True, null=True)
+
+    def publish(self):
+        self.published_date = timezone.now()
+        self.save()

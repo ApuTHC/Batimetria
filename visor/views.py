@@ -21,6 +21,7 @@ def eval_embalse(request):
 
 @api_view(['POST'])
 def eval_perfil(request):
-    response = spatial_analytics.eval_perfil(request.POST)
-    # return JsonResponse(response, safe=False)
+    response = spatial_analytics.eval_perfil(request.data)
+    print(response)
+    return Response(response)
 

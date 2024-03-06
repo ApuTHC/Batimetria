@@ -61,3 +61,17 @@ export interface Recurso {
     nombre_file: string;
     descripcion: string;
 }
+
+export interface Perfil {
+    id: number;
+    id_empresa: number;
+    id_embalse: number;
+    geojson: string;
+    nombre: string;
+    nombres: string;
+    proyectos: string;
+    ukey: string;
+    img: string;
+    dems: string;
+    ids: string;
+}

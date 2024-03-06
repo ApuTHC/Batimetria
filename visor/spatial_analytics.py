@@ -98,16 +98,16 @@ def eval_embalse(data):
 
 
 def eval_perfil(infoJSON):
-    perfil = json.loads(infoJSON.get('geojson'))
-    datos = json.loads(infoJSON.get('datos'))
-    dems = datos["dems"]
-    nombres = datos["nombres"]
+    perfil = infoJSON.get('geojson')
+    dems = infoJSON.get('demsPerfil')
+    nombres = infoJSON.get('nombresPerfil')
+    ids = infoJSON.get('idsPerfil')
     proyecto = infoJSON.get('proyecto')
     ukey = infoJSON.get('ukey')
     name = infoJSON.get('name')
-    ids = infoJSON.get('id')
+    id = infoJSON.get('id')
 
-    pathperf = './visor/static/Geodata/Proyectos/' + proyecto + '/Resultados/' + ukey
+    pathperf = './dist/static/Geodata/Proyectos/' + proyecto + '/Resultados/' + ukey
 
     if not os.path.exists(pathperf):
         os.makedirs(pathperf)
@@ -116,7 +116,7 @@ def eval_perfil(infoJSON):
         json.dump(perfil, archivo, indent=4)
 
     def extract_profile(dem, geom):
-        pathi = './visor/static/Geodata/Proyectos/'
+        pathi = './dist/static/Geodata/Proyectos/'
         with rasterio.open(pathi + dem, 'r') as src:
             # Obtener los valores del DEM a lo largo de la línea
             mask = geometry_mask([geom], out_shape=src.shape, transform=src.transform, invert=True)
@@ -154,7 +154,6 @@ def eval_perfil(infoJSON):
 
     # Colores y etiquetas para los perfiles
     colors = ['r', 'g', 'b']  # Puedes personalizar estos colores
-    labels = ['Perfil 1', 'Perfil 2', 'Perfil 3']  # Puedes personalizar estas etiquetas
 
     # Extraer perfiles de elevación para cada DEM
     profiles = [extract_profile(dem_file, line) for dem_file in dem_files]
@@ -164,7 +163,13 @@ def eval_perfil(infoJSON):
 
     response = {
         'status': True,
-        'id': ids,
+        'id': id,
+        'name': name,
+        'dems': dems,
+        'ids': ids,
+        'nombres': nombres,
+        'proyecto': proyecto,
+        'ukey': ukey,
         'img': 'Proyectos/' + proyecto + '/Resultados/' + ukey + '/Perfil.png'
     }
 
