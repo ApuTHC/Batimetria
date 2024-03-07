@@ -28,7 +28,7 @@ import '../assets/estilosVisor.css'
 import {toast} from "react-hot-toast";
 
 import {Accordion, Tab, Nav, Form, Button, Modal} from 'react-bootstrap';
-import {Embalse, Perfil, Recurso} from "../Interfaces.ts";
+import {Embalse, Medicion, Perfil, Recurso} from "../Interfaces.ts";
 import {useMutation} from "@tanstack/react-query";
 import {eval_embalse, eval_perfil} from "../api/visor.ts";
 import {delete_perfil, edit_perfil, post_perfil} from "../api/recursos.ts";
@@ -41,18 +41,20 @@ interface Props {
     embalses: []
     recursos_gen: []
     perfiles: []
+    mediciones: []
 }
 
 let map: L.Map;
 let perfilesArray = {};
 
 
-const Visor = ({recursos, embalses, recursos_gen, perfiles}: Props) => {
+const Visor = ({recursos, embalses, recursos_gen, perfiles, mediciones}: Props) => {
 
     console.log(embalses)
     console.log(recursos)
     console.log(recursos_gen)
     console.log(perfiles)
+    console.log(mediciones)
 
     let mapInitialized = false;
     let sidebar: L.Control.Sidebar;
@@ -71,6 +73,7 @@ const Visor = ({recursos, embalses, recursos_gen, perfiles}: Props) => {
     const [demsPerfil, setDemsPerfil] = useState([""]);
     const [layerPerfil, setLayerPerfil] = useState();
     const [idPerfil, setIdPerfil] = useState(0);
+
 
 
     const handleClose = () => setShow(false);
@@ -515,6 +518,54 @@ const Visor = ({recursos, embalses, recursos_gen, perfiles}: Props) => {
         setImageURL(perfilesArray[ukeyid].img);
     }
 
+    let tipos = {};
+    let fechas = {};
+
+    embalses.forEach(emb => {
+        tipos[emb.id] = [];
+        fechas[emb.id] = [];
+        mediciones.forEach(med => {
+            if (med.id_embalse === emb.id) {
+                if(!tipos[emb.id].includes(med.tipo)) {
+                    tipos[emb.id].push(med.tipo);
+                }
+                if(!fechas[emb.id].includes(med.fecha)) {
+                    fechas[emb.id].push(med.fecha);
+                }
+            }
+        })
+    });
+
+    const handleEvalMedi  = (event: React.FormEvent<HTMLFormElement>, idEmbalse, change) => {
+        const tipo = $("#tipo_medicion_" + idEmbalse).val().toString();
+        const fecha = $("#fecha_medicion_" + idEmbalse).val().toString();
+        if (tipo !== "0" && fecha !== "0") {
+            const medi = mediciones.find(med => med.id_embalse === idEmbalse && med.tipo === tipo && med.fecha === fecha);
+            const val = JSON.parse(medi.json);
+            const unit = medi.tipo.includes("Volumen") ? "m³" : "m²";
+            const msn = medi.tipo.includes("Volumen") ? "Volumen" : "Área";
+            if (change){
+                $("#cota_medicion_" + idEmbalse).attr("min", medi.min);
+                $("#cota_medicion_" + idEmbalse).attr("max", medi.max);
+                $("#cota_medicion_" + idEmbalse).val(medi.min);
+                $("#cota_medicion_text_" + idEmbalse).html(`Ingrese un número decimal (hasta 3 decimales) del ${medi.min} al ${medi.max}`);
+                $("#valor_medicion_" + idEmbalse).html(`Valor: ${val[medi.min]} ${unit}`);
+            }
+            else{
+                if (val[$("#cota_medicion_" + idEmbalse).val()] !== undefined) {
+                    $("#valor_medicion_" + idEmbalse).html(`${msn}: ${val[$("#cota_medicion_" + idEmbalse).val()]} ${unit}`);
+                }
+                else{
+                    $("#valor_medicion_" + idEmbalse).html(`${msn}: No registrado`);
+                }
+            }
+
+        }
+    };
+
+
+    function setCota(idEmbalse){
+    }
 
     return (
         <div>
@@ -781,8 +832,31 @@ const Visor = ({recursos, embalses, recursos_gen, perfiles}: Props) => {
                                                                             </div>
                                                                         </Tab.Pane>
                                                                         <Tab.Pane eventKey="volumen">
-                                                                            <div
-                                                                                id={`nav-volumen-${embalse.id}`}>volumen
+                                                                            <div>
+                                                                                <Form.Label>Tipo</Form.Label>
+                                                                                <Form.Select id={`tipo_medicion_${embalse.id}`} onChange={(e) => handleEvalMedi(e, embalse.id, true)}>
+                                                                                    <option value={"0"}>Elija Una Opcion</option>
+                                                                                    {tipos[embalse.id].length>0 && tipos[embalse.id].map((tipo) => (
+                                                                                        <option value={tipo}>{tipo}</option>
+                                                                                    ))}
+                                                                                </Form.Select>
+                                                                                <Form.Label>Fecha</Form.Label>
+                                                                                <Form.Select id={`fecha_medicion_${embalse.id}`} onChange={(e) => handleEvalMedi(e, embalse.id, true)}>
+                                                                                    <option value={"0"}>Elija Una Opcion</option>
+                                                                                    {fechas[embalse.id].length>0 && fechas[embalse.id].map((fecha) => (
+                                                                                        <option value={fecha}>{fecha}</option>
+                                                                                    ))}
+                                                                                </Form.Select>
+                                                                                <Form.Label id={`cota_medicion_text_${embalse.id}`}>Ingrese un número decimal (hasta 3 decimales) del min al max</Form.Label>
+                                                                                <Form.Control
+                                                                                    id={`cota_medicion_${embalse.id}`}
+                                                                                    type="number"
+                                                                                    step={0.001}
+                                                                                    min="0"
+                                                                                    max="1000"
+                                                                                    onChange={(e) => handleEvalMedi(e, embalse.id, false)}
+                                                                                />
+                                                                                <p id={`valor_medicion_${embalse.id}`}>Valor: </p>
                                                                             </div>
                                                                         </Tab.Pane>
                                                                     </Tab.Content>

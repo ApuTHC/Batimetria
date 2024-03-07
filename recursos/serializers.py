@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from . models import Recursos, RecursosGenerados, TipoRecurso, MetodosAdquisicion, Perfiles
+from .models import Recursos, RecursosGenerados, TipoRecurso, MetodosAdquisicion, Perfiles, Mediciones
 
 
 class RecursosSerializer(serializers.ModelSerializer):
@@ -29,5 +29,11 @@ class MetodosAdquisicionSerializer(serializers.ModelSerializer):
 class PerfilesSerializer(serializers.ModelSerializer):
     class Meta:
         model = Perfiles
+        fields = '__all__'
+
+
+class MedicionesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Mediciones
         fields = '__all__'
 

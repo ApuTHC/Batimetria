@@ -75,3 +75,14 @@ export interface Perfil {
     dems: string;
     ids: string;
 }
+
+export interface Medicion {
+    id: number;
+    id_empresa: number;
+    id_embalse: number;
+    tipo: string;
+    fecha: string;
+    max: number;
+    min: number;
+    json: string;
+}

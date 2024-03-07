@@ -86,3 +86,14 @@ class Perfiles(models.Model):
     def publish(self):
         self.published_date = timezone.now()
         self.save()
+
+
+class Mediciones(models.Model):
+    id = models.AutoField(primary_key=True)
+    id_embalse = models.ForeignKey(Embalses, on_delete=models.CASCADE)
+    id_empresa = models.ForeignKey(Empresas, on_delete=models.CASCADE, null=True)
+    tipo = models.CharField(max_length=100)
+    fecha = models.CharField(max_length=100)
+    max = models.CharField(max_length=100, null=True)
+    min = models.CharField(max_length=100, null=True)
+    json = models.TextField(blank=True, null=True)

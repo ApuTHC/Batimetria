@@ -2,7 +2,7 @@ import Visor from "../components/Visor";
 
 import {useQuery} from "@tanstack/react-query";
 import {get_embalses} from "../api/proyectos.ts";
-import {get_perfiles, get_recursos, get_recursos_generados} from '../api/recursos.ts';
+import {get_mediciones, get_perfiles, get_recursos, get_recursos_generados} from '../api/recursos.ts';
 
 
 const VisorPage = () => {
@@ -27,10 +27,15 @@ const VisorPage = () => {
         queryFn: get_perfiles,
     });
 
+    const mediciones = useQuery({
+        queryKey: ["mediciones"],
+        queryFn: get_mediciones,
+    });
+
 
     return (
-        recursos.data !== undefined && embalses.data !== undefined && recursos_gen.data !== undefined && perfiles.data !== undefined ? (
-            < Visor embalses={embalses.data} recursos={recursos.data} recursos_gen={recursos_gen.data} perfiles={perfiles.data}/>
+        recursos.data !== undefined && embalses.data !== undefined && recursos_gen.data !== undefined && perfiles.data !== undefined && mediciones.data !== undefined ? (
+            < Visor embalses={embalses.data} recursos={recursos.data} recursos_gen={recursos_gen.data} perfiles={perfiles.data} mediciones={mediciones.data}/>
         ) : (
             <></>
         )

@@ -12,6 +12,11 @@ export const get_recursos_generados = async () => {
     return response.data;
 }
 
+export const get_mediciones = async () => {
+    const response = await authAxios.get("/recursos/get_mediciones/");
+    return response.data;
+}
+
 export const get_perfiles = async () => {
     const response = await authAxios.get("/recursos/get_perfiles/");
     return response.data;
