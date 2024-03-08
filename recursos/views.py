@@ -65,9 +65,9 @@ def edit_perfil(request, pk):
 
 
 @api_view(['DELETE'])
-def delete_perfil(pk):
-    product = Perfiles.objects.get(pk=pk)
-    product.delete()
-    return Response({'detail': 'Product deleted successfully'}, status=status.HTTP_204_NO_CONTENT)
+def delete_perfil(request, pk):
+    perfil = Perfiles.objects.get(pk=pk)
+    perfil.delete()
+    return Response(data={'id': pk}, status=status.HTTP_200_OK)
 
 

@@ -124,7 +124,11 @@ const Visor = ({recursos, embalses, recursos_gen, perfiles, mediciones}: Props) 
             const searchCtrl = L.control.fuseSearch().addTo(map);
             $("#buscadorContent").append($(".leaflet-fusesearch-panel .content"));
             $(searchCtrl._container).remove();
-            $(".content .header .close").remove();
+            $("#buscadorContent .content .header").prepend('<i class="fa-solid fa-magnifying-glass-location iconoBuscador"></i>');
+            $("#buscadorContent .content .header").addClass("headerBuscador");
+            $("#buscadorContent .content .header .search-input").addClass("buscador");
+            $("#buscadorContent .content .header img").remove();
+            $("#buscadorContent .content .header .close").remove();
 
 
             map.pm.setLang('es');
@@ -406,6 +410,20 @@ const Visor = ({recursos, embalses, recursos_gen, perfiles, mediciones}: Props) 
             console.error(error);
         },
     });
+    const deletePerfilMutation = useMutation({
+        mutationFn: delete_perfil,
+        onSuccess: (response) => {
+            console.log(response)
+            $(`#content_perfil_${response.data.id}`).remove();
+            const perfil_aux = perfiles.find(objeto => objeto.id === response.data.id);
+            map.removeLayer(perfilesArray[perfil_aux.ukey].layer);
+            toast.success("Perfil Eliminado Exitosamente");
+        },
+        onError: (error) => {
+            toast.error("Error al eliminar el perfil");
+            console.error(error);
+        },
+    });
 
     const handleSavePerfil = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -488,18 +506,6 @@ const Visor = ({recursos, embalses, recursos_gen, perfiles, mediciones}: Props) 
         deletePerfilMutation.mutate(idPerfil);
     };
 
-    const deletePerfilMutation = useMutation({
-        mutationFn: delete_perfil,
-        onSuccess: (response) => {
-            console.log(response.data)
-            toast.success("Perfil Eliminado Exitosamente");
-        },
-        onError: (error) => {
-            toast.error("Error al eliminar el perfil");
-            console.error(error);
-        },
-    });
-
     function showPerfilModal(ukeyid) {
         setShow(true)
         setUKey(perfilesArray[ukeyid].ukey)
@@ -548,7 +554,7 @@ const Visor = ({recursos, embalses, recursos_gen, perfiles, mediciones}: Props) 
                 $("#cota_medicion_" + idEmbalse).attr("min", medi.min);
                 $("#cota_medicion_" + idEmbalse).attr("max", medi.max);
                 $("#cota_medicion_" + idEmbalse).val(medi.min);
-                $("#cota_medicion_text_" + idEmbalse).html(`Ingrese un número decimal (hasta 3 decimales) del ${medi.min} al ${medi.max}`);
+                $("#cota_medicion_text_" + idEmbalse).html(`Ingrese un número (hasta 3 decimales) del ${medi.min} al ${medi.max}`);
                 $("#valor_medicion_" + idEmbalse).html(`Valor: ${val[medi.min]} ${unit}`);
             }
             else{
@@ -563,9 +569,6 @@ const Visor = ({recursos, embalses, recursos_gen, perfiles, mediciones}: Props) 
         }
     };
 
-
-    function setCota(idEmbalse){
-    }
 
     return (
         <div>
@@ -594,10 +597,10 @@ const Visor = ({recursos, embalses, recursos_gen, perfiles, mediciones}: Props) 
                             Visor Proyectos
                             <span className="leaflet-sidebar-close"><FontAwesomeIcon icon={faCaretLeft}/></span>
                         </h1>
-                        <h4 className="text-justify"><b>Proyectos Batimmetría S.A.S.</b></h4>
-                        <p className="h5">En este visor podrá visualizar los recursos generados para los
+                        <h2 className="h4 my-3"><b>Proyectos Batimmetría S.A.S.</b></h2>
+                        <p className="h5 text-justify">En este visor podrá visualizar los recursos generados para los
                             embalses de su empresa.</p>
-                        <p className="h5">Seleccione en el mapa el pin del embalse que desee visualizar o
+                        <p className="h5 text-justify">Seleccione en el mapa el pin del embalse que desee visualizar o
                             utilice el buscador para localizarlo.</p>
 
                     </div>
@@ -606,7 +609,7 @@ const Visor = ({recursos, embalses, recursos_gen, perfiles, mediciones}: Props) 
                             Mapa Base
                             <span className="leaflet-sidebar-close"><FontAwesomeIcon icon={faCaretLeft}/></span>
                         </h1>
-                        <h4>Seleccione el mapa base:</h4>
+                        <h2 className="h5 my-3">Seleccione el mapa base:</h2>
                         <div id="basemapContent"></div>
                     </div>
                     <div className="leaflet-sidebar-pane" id="buscador">
@@ -652,14 +655,12 @@ const Visor = ({recursos, embalses, recursos_gen, perfiles, mediciones}: Props) 
                                                                         recursos.map((recurso: Recurso) => (
                                                                             recurso.id_tipo_recurso === 1 && recurso.id_embalse === embalse.id ? (
 
-                                                                                <div className="content-file">
+                                                                                <div className="content-file recursos">
                                                                                     <label className="switch">
-                                                                                        <input type="checkbox"
+                                                                                        <Form.Check type="switch"
                                                                                                id={`capa_proy_${recurso.id}`}
                                                                                                onChange={(e) => handleRecursoChange(e, recurso.id, true)}
                                                                                         />
-                                                                                        <span
-                                                                                            className="slider round"></span>
                                                                                     </label>
                                                                                     <a>{recurso.nombre}</a>
                                                                                     <div className="d-block"></div>
@@ -687,14 +688,12 @@ const Visor = ({recursos, embalses, recursos_gen, perfiles, mediciones}: Props) 
                                                                         recursos.map((recurso: Recurso) => (
                                                                             recurso.id_tipo_recurso === 2 && recurso.id_embalse === embalse.id ? (
 
-                                                                                <div className="content-file">
+                                                                                <div className="content-file recursos">
                                                                                     <label className="switch">
-                                                                                        <input type="checkbox"
+                                                                                        <Form.Check type="switch"
                                                                                                id={`capa_proy_${recurso.id}`}
                                                                                                onChange={(e) => handleRecursoChange(e, recurso.id, true)}
                                                                                         />
-                                                                                        <span
-                                                                                            className="slider round"></span>
                                                                                     </label>
                                                                                     <a>{recurso.nombre}</a>
                                                                                     <div className="d-block"></div>
@@ -722,22 +721,21 @@ const Visor = ({recursos, embalses, recursos_gen, perfiles, mediciones}: Props) 
                                                                         perfiles.map((perfil: Perfil) => (
                                                                             perfil.id_embalse === embalse.id ? (
 
-                                                                                <div className="content-file">
-                                                                                    <label className="switch">
-                                                                                        <input type="checkbox"
-                                                                                               id={`capa_perfil_${perfil.id}`}
-                                                                                               onChange={(e) => handlePerfilShow(e, perfil.id, false)}
-                                                                                        />
-                                                                                        <span
-                                                                                            className="slider round"></span>
-                                                                                    </label>
-                                                                                    <a>{perfil.nombre}</a>
-                                                                                    <div className="d-block"></div>
-                                                                                    <div>
-                                                                                        <Button className="d-inline-block" id="editarperfil-' + response.id + '"
+                                                                                <div id={`content_perfil_${perfil.id}`} className="content-file perfiles">
+                                                                                    <div className="d-inline-block">
+                                                                                        <label className="switch">
+                                                                                            <Form.Check type="switch"
+                                                                                                   id={`capa_perfil_${perfil.id}`}
+                                                                                                   onChange={(e) => handlePerfilShow(e, perfil.id, false)}
+                                                                                            />
+                                                                                        </label>
+                                                                                        <a>{perfil.nombre}</a>
+                                                                                    </div>
+                                                                                    <div className="d-inline-block">
+                                                                                        <Button className="d-inline-block btn-1" id="editarperfil-' + response.id + '"
                                                                                                 onClick={(e) => handlePerfilShow(e, perfil.id, true)}>
                                                                                             <FontAwesomeIcon icon={faChartLine} className="text-xl"/></Button>
-                                                                                        <Button className="d-inline-block ms-1" id="borrarperfil-' + response.id + '"
+                                                                                        <Button className="d-inline-block btn-1 ms-1" id="borrarperfil-' + response.id + '"
                                                                                                 onClick={(e) => handlePerfilDelete(e, perfil.id)}>
                                                                                             <FontAwesomeIcon icon={faTrashCan} className="text-xl"/></Button>
                                                                                     </div>
@@ -763,7 +761,7 @@ const Visor = ({recursos, embalses, recursos_gen, perfiles, mediciones}: Props) 
                                                                                 onSubmit={(e) => handleDiferencia(e, embalse.id)}
                                                                             >
                                                                                 <Form.Group>
-                                                                                    <Form.Label>Proyecto
+                                                                                    <Form.Label className="h5">Proyecto
                                                                                         Anterior</Form.Label>
                                                                                     <Form.Select
                                                                                         id={`select-1_${embalse.id}`}>
@@ -777,9 +775,9 @@ const Visor = ({recursos, embalses, recursos_gen, perfiles, mediciones}: Props) 
                                                                                     </Form.Select>
                                                                                 </Form.Group>
                                                                                 <Form.Group>
-                                                                                    <Form.Label>Proyecto
+                                                                                    <Form.Label className="h5 mt-3">Proyecto
                                                                                         Posterior</Form.Label>
-                                                                                    <Form.Select
+                                                                                    <Form.Select className="mb-3"
                                                                                         id={`select-2_${embalse.id}`}>
                                                                                         {recursos && recursos !== undefined &&
                                                                                             recursos.map((recurso: Recurso) => (
@@ -790,27 +788,29 @@ const Visor = ({recursos, embalses, recursos_gen, perfiles, mediciones}: Props) 
                                                                                             ))}
                                                                                     </Form.Select>
                                                                                 </Form.Group>
-                                                                                <Button type="submit" variant="primary">Calcular
+                                                                                <Button className="btn-1 mb-3" type="submit" variant="primary">Calcular
                                                                                     Diferencia</Button>
                                                                             </Form>
+                                                                            <div>
+                                                                                <p className="h5 titulo-generados"> Recursos Generados</p>
+                                                                            </div>
                                                                             <div>
                                                                                 {recursos_gen && recursos_gen !== undefined &&
                                                                                     recursos_gen.map((recurso: Recurso) => (
                                                                                         recurso.id_tipo_recurso === 1 && recurso.id_embalse === embalse.id ? (
 
                                                                                             <div
-                                                                                                className="content-file">
-                                                                                                <label
-                                                                                                    className="switch">
-                                                                                                    <input
-                                                                                                        type="checkbox"
-                                                                                                        id={`capa_proy_${recurso.id}_gen`}
-                                                                                                        onChange={(e) => handleRecursoChange(e, recurso.id, false)}
-                                                                                                    />
-                                                                                                    <span
-                                                                                                        className="slider round"></span>
-                                                                                                </label>
-                                                                                                <a>{recurso.nombre}</a>
+                                                                                                className="content-file recursos">
+                                                                                                <div className="nameRecurso">
+                                                                                                    <label
+                                                                                                        className="switch">
+                                                                                                        <Form.Check type="switch"
+                                                                                                            id={`capa_proy_${recurso.id}_gen`}
+                                                                                                            onChange={(e) => handleRecursoChange(e, recurso.id, false)}
+                                                                                                        />
+                                                                                                    </label>
+                                                                                                    <a>{recurso.nombre}</a>
+                                                                                                </div>
                                                                                                 <div
                                                                                                     className="d-block"></div>
                                                                                                 <div>
@@ -833,21 +833,21 @@ const Visor = ({recursos, embalses, recursos_gen, perfiles, mediciones}: Props) 
                                                                         </Tab.Pane>
                                                                         <Tab.Pane eventKey="volumen">
                                                                             <div>
-                                                                                <Form.Label>Tipo</Form.Label>
+                                                                                <Form.Label className="h5">Tipo</Form.Label>
                                                                                 <Form.Select id={`tipo_medicion_${embalse.id}`} onChange={(e) => handleEvalMedi(e, embalse.id, true)}>
                                                                                     <option value={"0"}>Elija Una Opcion</option>
                                                                                     {tipos[embalse.id].length>0 && tipos[embalse.id].map((tipo) => (
                                                                                         <option value={tipo}>{tipo}</option>
                                                                                     ))}
                                                                                 </Form.Select>
-                                                                                <Form.Label>Fecha</Form.Label>
+                                                                                <Form.Label className="h5 mt-3">Fecha</Form.Label>
                                                                                 <Form.Select id={`fecha_medicion_${embalse.id}`} onChange={(e) => handleEvalMedi(e, embalse.id, true)}>
                                                                                     <option value={"0"}>Elija Una Opcion</option>
                                                                                     {fechas[embalse.id].length>0 && fechas[embalse.id].map((fecha) => (
                                                                                         <option value={fecha}>{fecha}</option>
                                                                                     ))}
                                                                                 </Form.Select>
-                                                                                <Form.Label id={`cota_medicion_text_${embalse.id}`}>Ingrese un número decimal (hasta 3 decimales) del min al max</Form.Label>
+                                                                                <Form.Label className="h5 mt-3" id={`cota_medicion_text_${embalse.id}`}>Ingrese un número (hasta 3 decimales) del min al max</Form.Label>
                                                                                 <Form.Control
                                                                                     id={`cota_medicion_${embalse.id}`}
                                                                                     type="number"
@@ -856,7 +856,7 @@ const Visor = ({recursos, embalses, recursos_gen, perfiles, mediciones}: Props) 
                                                                                     max="1000"
                                                                                     onChange={(e) => handleEvalMedi(e, embalse.id, false)}
                                                                                 />
-                                                                                <p id={`valor_medicion_${embalse.id}`}>Valor: </p>
+                                                                                <p className="h5 my-3" id={`valor_medicion_${embalse.id}`}>Valor: </p>
                                                                             </div>
                                                                         </Tab.Pane>
                                                                     </Tab.Content>
@@ -876,7 +876,7 @@ const Visor = ({recursos, embalses, recursos_gen, perfiles, mediciones}: Props) 
 
             <div id="map" style={{height: '93vh', width: '100vw'}}></div>
 
-            <Modal show={show} onHide={handleClose} size="lg"
+            <Modal show={show} onHide={handleClose} size="xl"
                    aria-labelledby="contained-modal-title-vcenter"
                    centered>
                 <Modal.Header closeButton>
@@ -890,33 +890,33 @@ const Visor = ({recursos, embalses, recursos_gen, perfiles, mediciones}: Props) 
                     </div>
                     <div id="selPerfilContent">
                         <Form.Group>
-                            <Form.Label>Establezca un nombre para identificar el perfil: </Form.Label>
-                            <Form.Control autoFocus type="text" className="ml-1" id="nameperfil" defaultValue={namePerfil}
+                            <Form.Label className="h5">Establezca un nombre para identificar el perfil: </Form.Label>
+                            <Form.Control autoFocus type="text" className="ml-1 mb-3" id="nameperfil" defaultValue={namePerfil}
                                           placeholder="Ingrese el nombre"/>
                         </Form.Group>
                         <div>
                             {recursos.map((recurso: Recurso) => (
                                 recurso.id_tipo_recurso === 1 ? (
                                     <div>
-                                        <input className="me-1" type="checkbox" id={`checkperfil_${recurso.id}`}
+                                        <input className="mb-4 mx-1 check-perfil" type="checkbox" id={`checkperfil_${recurso.id}`}
                                                name={`${recurso.nombre}`}
                                                defaultChecked={idsPerfil.includes(recurso.id)}
                                         />
-                                        <label>{`${recurso.nombre}`}</label>
+                                        <label className="h5">{`${recurso.nombre}`}</label>
                                     </div>
                                 ) : null
                             ))}
                         </div>
                         <div>
-                            <Button variant="primary" className="mt-2" onClick={(e) => handlePerfilClick(e)}>Generar Perfil</Button>
+                            <Button className="mt-2 btn-1" onClick={(e) => handlePerfilClick(e)}>Generar Perfil</Button>
                         </div>
                     </div>
                 </Modal.Body>
                 <Modal.Footer>
-                    <Button variant="secondary" onClick={handleClose}>
+                    <Button className="btn-2" onClick={handleClose}>
                         Cerrar
                     </Button>
-                    <Button variant="primary" onClick={(e) => handleSavePerfil(e)}>
+                    <Button className="btn-1" onClick={(e) => handleSavePerfil(e)}>
                         Guardar
                     </Button>
                 </Modal.Footer>

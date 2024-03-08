@@ -41,13 +41,13 @@ export const edit_perfil = async (data: Perfil) => {
     const formData = new FormData();
     formData.append("id_embalse", data.id_embalse.toString());
     formData.append("nombre", data.nombre);
-    formData.append("nombres", JSON.stringify(data.nombres));
+    formData.append("nombres", data.nombres);
     formData.append("proyectos", data.proyectos);
     formData.append("ukey", data.ukey);
     formData.append("img", data.img);
-    formData.append("geojson", JSON.stringify(data.geojson));
-    formData.append("dems", JSON.stringify(data.dems));
-    formData.append("ids", JSON.stringify(data.ids));
+    formData.append("geojson", data.geojson);
+    formData.append("dems", data.dems);
+    formData.append("ids", data.ids);
 
     console.log(formData)
     const response = await authAxios.put(`/recursos/edit/${data.id}/`, formData)
@@ -55,5 +55,5 @@ export const edit_perfil = async (data: Perfil) => {
 }
 
 export const delete_perfil = async (id: number) => {
-    await authAxios.delete(`/recursos/delete/${id}/`)
+    return await authAxios.delete(`/recursos/delete/${id}/`)
 }
