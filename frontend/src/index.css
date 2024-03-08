@@ -14,3 +14,7 @@ button {
 .off {
     color: #ccc;
 }
+
+.menuPerfil{
+    z-index: 401;
+}

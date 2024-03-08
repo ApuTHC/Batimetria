@@ -416,7 +416,9 @@ const Visor = ({recursos, embalses, recursos_gen, perfiles, mediciones}: Props) 
             console.log(response)
             $(`#content_perfil_${response.data.id}`).remove();
             const perfil_aux = perfiles.find(objeto => objeto.id === response.data.id);
-            map.removeLayer(perfilesArray[perfil_aux.ukey].layer);
+            if(perfilesArray[perfil_aux.ukey] !== undefined){
+                map.removeLayer(perfilesArray[perfil_aux.ukey].layer);
+            }
             toast.success("Perfil Eliminado Exitosamente");
         },
         onError: (error) => {

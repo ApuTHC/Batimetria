@@ -1,11 +1,7 @@
 import Users from "../components/Users"
-import Orders from "../components/Orders"
-import Products from "../components/Products"
 import { useState } from "react"
-import {search_prod} from "../api/products"
 import {search_users} from "../api/users.ts";
 import {useQuery} from "@tanstack/react-query";
-import {search_order} from "../api/orders.ts";
 
 
 const AdminPage = () => {
@@ -14,35 +10,17 @@ const AdminPage = () => {
 
     const [search, setSearch] = useState("");
 
-    const { data } = useQuery({
-        queryKey: ["products", search],
-        queryFn: () => {
-            if (search && show === 0) {
-                return search_prod(search);
-            }
-            return { products: [] };
-        },
-    });
 
     const { data : users } = useQuery({
         queryKey: ["users", search],
         queryFn: () => {
-            if (search && show === 2) {
+            if (search && show === 0) {
                 return search_users(search);
             }
             return { users: [] };
         },
     });
 
-    const { data: orders } = useQuery({
-        queryKey: ["orders", search],
-        queryFn: () => {
-            if (search && show === 1) {
-                return search_order(search);
-            }
-            return { orders: [] };
-        },
-    });
 
     // 1- search input
     // 2- if 0, 1, 2 hace fetch a una funcion diferente
@@ -52,7 +30,7 @@ const AdminPage = () => {
     return (
         <section className="bg-gray-50 dark:bg-gray-900 p-3 sm:p-5">
             <div className="mx-auto max-w-screen-xl px-4 lg:px-12">
-                <div className="bg-white dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden">
+                <div className="bg-dark dark:bg-gray-800 relative shadow-md sm:rounded-lg overflow-hidden">
                     <div className="flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4">
                         <div className="w-full md:w-1/2">
                             <form className="flex items-center">
@@ -71,23 +49,11 @@ const AdminPage = () => {
                             <button
                                 onClick={() => setShow(0)}
                                 type="button" className="flex items-center justify-center text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800">
-                                Products
-                            </button>
-                            <button
-                                onClick={() => setShow(1)}
-                                type="button" className="flex items-center justify-center text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800">
-                                Orders
-                            </button>
-                            <button
-                                onClick={() => setShow(2)}
-                                type="button" className="flex items-center justify-center text-white bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800">
                                 Users
                             </button>
                         </div>
                     </div>
-                    {show === 0 && <Products results={data}/>}
-                    {show === 1 && <Orders results={orders}/>}
-                    {show === 2 && <Users results={users}/>}
+                    {show === 0 && <Users results={users}/>}
                 </div>
             </div>
         </section>
