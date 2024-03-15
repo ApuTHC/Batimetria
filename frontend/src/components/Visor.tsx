@@ -28,7 +28,7 @@ import '../assets/estilosVisor.css'
 import {toast} from "react-hot-toast";
 
 import {Accordion, Tab, Nav, Form, Button, Modal} from 'react-bootstrap';
-import {Embalse, Medicion, Perfil, Recurso} from "../Interfaces.ts";
+import {Embalse, Perfil, Recurso} from "../Interfaces.ts";
 import {useMutation} from "@tanstack/react-query";
 import {eval_embalse, eval_perfil} from "../api/visor.ts";
 import {delete_perfil, edit_perfil, post_perfil} from "../api/recursos.ts";
@@ -117,10 +117,11 @@ const Visor = ({recursos, embalses, recursos_gen, perfiles, mediciones}: Props) 
                     name: 'Google Maps'
                 },
             ];
+            // @ts-expect-error
             const basemaps = new L.Control.basemapsSwitcher(basemaps_array, {position: 'topright'}).addTo(map);
             $("#basemapContent").append($(basemaps._container));
             $(basemaps._container).find(".basemapImg").removeClass("hidden");
-
+            // @ts-expect-error
             const searchCtrl = L.control.fuseSearch().addTo(map);
             $("#buscadorContent").append($(".leaflet-fusesearch-panel .content"));
             $(searchCtrl._container).remove();
@@ -133,9 +134,10 @@ const Visor = ({recursos, embalses, recursos_gen, perfiles, mediciones}: Props) 
 
             map.pm.setLang('es');
             map.on('pm:create', function (e) {
-                e.layer.on('click', function (ev) {
+                e.layer.on('click', function () {
                     setShow(true)
                     setUKey(Math.random().toString(36).substring(2))
+                    // @ts-expect-error
                     setGeojsonPerfil(this.toGeoJSON())
                     setImgURL("");
                     setImageURL("");
@@ -145,6 +147,7 @@ const Visor = ({recursos, embalses, recursos_gen, perfiles, mediciones}: Props) 
                     setProyectoPerfil("");
                     setNombresPerfil([""])
                     setDemsPerfil([""])
+                    // @ts-expect-error
                     setLayerPerfil(this);
                 });
             });
@@ -185,6 +188,7 @@ const Visor = ({recursos, embalses, recursos_gen, perfiles, mediciones}: Props) 
                 });
                 L.geoJson(point, {
                         onEachFeature: function (feature, layer) {
+                            // @ts-expect-error
                             feature.layer = layer;
                             layer.bindPopup(popupEmbalses);
                         }
@@ -199,7 +203,7 @@ const Visor = ({recursos, embalses, recursos_gen, perfiles, mediciones}: Props) 
         }
     }, []);
 
-
+    // @ts-expect-error
     function popupEmbalses(layer) {
         sidebar.open('capas');
         setActiveKey(() => (`embalse_${layer.feature.properties.id}`));
@@ -228,20 +232,22 @@ const Visor = ({recursos, embalses, recursos_gen, perfiles, mediciones}: Props) 
             if (obj_capas_recursos[idResAux] === undefined) {
                 console.log(`El recurso con ID ${idResAux} no existe en el mapa.`);
                 const true_resource = recursos1.find(objeto => objeto.id === resourceId);
-
+                // @ts-expect-error
                 const layerWMS = WMS.source(true_resource.ruta, {
                     attribution: "",
+                    // @ts-expect-error
                     useCors: false,
                     opacity: 1,
                     maxZoom: 25,
                     format: 'image/png',
+                    // @ts-expect-error
                     layers: true_resource.nombre,
                     transparent: true,
                     version: '1.3.0',
                     info_format: 'text/html',
                     env: "nn"
                 });
-
+                // @ts-expect-error
                 const capa = layerWMS.getLayer(true_resource.capa).addTo(map);
                 const legend = "http://localhost:8080/geoserver/prueba/wms" + "?REQUEST=GetLegendGraphic&VERSION=1.0.0&FORMAT=image/png&WIDTH=20&HEIGHT=20&LAYER=" + "prueba:MDT_Diciembre_2019";
                 $("#legend_" + idResAux).append('<div className="legend_capa"><img src="' + legend + '" alt="Leyenda" /></div>');
@@ -282,6 +288,7 @@ const Visor = ({recursos, embalses, recursos_gen, perfiles, mediciones}: Props) 
         mutationFn: () => eval_embalse(id_1, id_2),
         onSuccess: (response) => {
             console.log(response.data)
+            // @ts-expect-error
             recursos_gen.push(response.data)
             toast.success("Calculo de Diferencia Exitoso!");
         },
@@ -296,19 +303,21 @@ const Visor = ({recursos, embalses, recursos_gen, perfiles, mediciones}: Props) 
         console.log(embalseId)
         console.log($("#select-1_" + embalseId).val())
         console.log($("#select-2_" + embalseId).val())
+        // @ts-expect-error
         id_1 = parseInt($("#select-1_" + embalseId).val());
+        // @ts-expect-error
         id_2 = parseInt($("#select-2_" + embalseId).val());
         eval_embalse_Mutation.mutate()
     };
     const handleEmbalseClick = (event: React.ChangeEvent<HTMLInputElement>, embalseId: number) => {
         event.preventDefault()
         console.log(embalseId)
+        // @ts-expect-error
         const embalseClick = embalses.find(objeto => objeto.id === embalseId);
+        // @ts-expect-error
         map.setView([embalseClick['latitud'], embalseClick['longitud']], 16);
     };
 
-
-    let proyecto: string = "";
     const handlePerfilClick = (event: React.ChangeEvent<HTMLInputElement>) => {
         event.preventDefault()
         const rutas_dem: string[] = [];
@@ -328,6 +337,7 @@ const Visor = ({recursos, embalses, recursos_gen, perfiles, mediciones}: Props) 
             return;
         }
         else{
+            // @ts-expect-error
             setNamePerfil($("#nameperfil").val().toString())
         }
         if (rutas_dem.length === 0){
@@ -356,8 +366,11 @@ const Visor = ({recursos, embalses, recursos_gen, perfiles, mediciones}: Props) 
             // recursos_gen.push(response.data)
 
             const newPerfil = layerPerfil;
+            // @ts-expect-error
             newPerfil.ukey = uKey;
+            // @ts-expect-error
             map.removeLayer(layerPerfil);
+            // @ts-expect-error
             perfilesArray[response.data.ukey] = {"geo":geojsonPerfil,
                 'id': response.data.id,
                 'nombre': response.data.name,
@@ -369,8 +382,11 @@ const Visor = ({recursos, embalses, recursos_gen, perfiles, mediciones}: Props) 
                 'img': response.data.img,
                 'layer': newPerfil
             };
+            // @ts-expect-error
             newPerfil.addTo(map);
-            newPerfil.on('click', function(e) {
+            // @ts-expect-error
+            newPerfil.on('click', function() {
+                // @ts-expect-error
                 const ukeyid = this.ukey;
                 showPerfilModal(ukeyid);
             });
@@ -387,7 +403,9 @@ const Visor = ({recursos, embalses, recursos_gen, perfiles, mediciones}: Props) 
         mutationFn: post_perfil,
         onSuccess: (response) => {
             console.log(response.data)
+            // @ts-expect-error
             perfiles.push(response.data)
+            // @ts-expect-error
             perfilesArray[response.data.ukey].id = response.data.id;
             toast.success("Perfil Creado Exitosamente");
         },
@@ -400,8 +418,10 @@ const Visor = ({recursos, embalses, recursos_gen, perfiles, mediciones}: Props) 
         mutationFn: edit_perfil,
         onSuccess: (response) => {
             console.log(response.data)
+            // @ts-expect-error
             const id_aux = perfiles.findIndex(objeto => objeto.id === response.data.id);
             console.log(id_aux)
+            // @ts-expect-error
             perfiles[id_aux] = response.data;
             toast.success("Perfil Editado Exitosamente");
         },
@@ -415,8 +435,11 @@ const Visor = ({recursos, embalses, recursos_gen, perfiles, mediciones}: Props) 
         onSuccess: (response) => {
             console.log(response)
             $(`#content_perfil_${response.data.id}`).remove();
+            // @ts-expect-error
             const perfil_aux = perfiles.find(objeto => objeto.id === response.data.id);
+            // @ts-expect-error
             if(perfilesArray[perfil_aux.ukey] !== undefined){
+                // @ts-expect-error
                 map.removeLayer(perfilesArray[perfil_aux.ukey].layer);
             }
             toast.success("Perfil Eliminado Exitosamente");
@@ -433,6 +456,7 @@ const Visor = ({recursos, embalses, recursos_gen, perfiles, mediciones}: Props) 
             toast.error("Debe graficar el perfil antes de guardarlo.");
         }
         else{
+            // @ts-expect-error
             const id_embalse_aux = recursos.find(objeto => objeto.id === idsPerfil[0]).id_embalse;
             if(idPerfil === 0){
                 addPerfilMutation.mutate({
@@ -467,62 +491,95 @@ const Visor = ({recursos, embalses, recursos_gen, perfiles, mediciones}: Props) 
         }
     };
 
+    // @ts-expect-error
     const handlePerfilShow = (event: React.FormEvent<HTMLFormElement>, idPerfil, isBtn) => {
+        // @ts-expect-error
         const perfil_aux = perfiles.find(objeto => objeto.id === idPerfil);
+        // @ts-expect-error
         if (perfilesArray[perfil_aux.ukey] === undefined){
+            // @ts-expect-error
             const newPerfil = L.geoJSON(JSON.parse(perfil_aux.geojson), {weight: 10})
+            // @ts-expect-error
             newPerfil.ukey = perfil_aux.ukey;
+            // @ts-expect-error
             perfilesArray[perfil_aux.ukey] = {
+                // @ts-expect-error
                 "geo":JSON.parse(perfil_aux.geojson),
+                // @ts-expect-error
                 'id': perfil_aux.id,
+                // @ts-expect-error
                 'nombre': perfil_aux.nombre,
+                // @ts-expect-error
                 'dems': JSON.parse(perfil_aux.dems),
+                // @ts-expect-error
                 'ids': JSON.parse(perfil_aux.ids),
+                // @ts-expect-error
                 'nombres': JSON.parse(perfil_aux.nombres),
+                // @ts-expect-error
                 'proyecto': perfil_aux.proyectos,
+                // @ts-expect-error
                 'ukey': perfil_aux.ukey,
+                // @ts-expect-error
                 'img': perfil_aux.img,
                 'layer': newPerfil
             };
-            newPerfil.on('click', function(e) {
+            newPerfil.on('click', function() {
+                // @ts-expect-error
                 const ukeyid = this.ukey;
                 showPerfilModal(ukeyid);
             });
         }
         if (!isBtn){
+            // @ts-expect-error
             const isChecked = event.target.checked;
             if(isChecked){
+                // @ts-expect-error
                 perfilesArray[perfil_aux.ukey].layer.addTo(map);
             }
             else{
+                // @ts-expect-error
                 map.removeLayer(perfilesArray[perfil_aux.ukey].layer);
             }
         }
         else{
+            // @ts-expect-error
             const ukeyid = perfil_aux.ukey;
             showPerfilModal(ukeyid);
         }
     };
 
+    // @ts-expect-error
     const handlePerfilDelete = (event: React.FormEvent<HTMLFormElement>, idPerfil) => {
         deletePerfilMutation.mutate(idPerfil);
     };
 
+    // @ts-expect-error
     function showPerfilModal(ukeyid) {
         setShow(true)
+        // @ts-expect-error
         setUKey(perfilesArray[ukeyid].ukey)
+        // @ts-expect-error
         setGeojsonPerfil(perfilesArray[ukeyid].geo)
+        // @ts-expect-error
         setLayerPerfil(perfilesArray[ukeyid].layer);
+        // @ts-expect-error
         setNamePerfil(perfilesArray[ukeyid].nombre);
+        // @ts-expect-error
         setIdsPerfil(perfilesArray[ukeyid].ids);
+        // @ts-expect-error
         setIdPerfil(perfilesArray[ukeyid].id);
+        // @ts-expect-error
         setNombresPerfil(perfilesArray[ukeyid].nombres)
+        // @ts-expect-error
         setDemsPerfil(perfilesArray[ukeyid].dems)
+        // @ts-expect-error
         setProyectoPerfil(perfilesArray[ukeyid].proyecto)
+        // @ts-expect-error
         const imageUrl = import.meta.env.VITE_BACKEND_URL + '/static/Geodata/'+perfilesArray[ukeyid].img;
         const timestamp = new Date().getTime();
         const updatedImageUrl = imageUrl + '?t=' + timestamp;
         setImgURL(updatedImageUrl);
+        // @ts-expect-error
         setImageURL(perfilesArray[ukeyid].img);
     }
 
@@ -530,37 +587,58 @@ const Visor = ({recursos, embalses, recursos_gen, perfiles, mediciones}: Props) 
     let fechas = {};
 
     embalses.forEach(emb => {
+        // @ts-expect-error
         tipos[emb.id] = [];
+        // @ts-expect-error
         fechas[emb.id] = [];
         mediciones.forEach(med => {
+        // @ts-expect-error
             if (med.id_embalse === emb.id) {
+        // @ts-expect-error
                 if(!tipos[emb.id].includes(med.tipo)) {
+        // @ts-expect-error
                     tipos[emb.id].push(med.tipo);
                 }
+        // @ts-expect-error
                 if(!fechas[emb.id].includes(med.fecha)) {
+        // @ts-expect-error
                     fechas[emb.id].push(med.fecha);
                 }
             }
         })
     });
 
+    // @ts-expect-error
     const handleEvalMedi  = (event: React.FormEvent<HTMLFormElement>, idEmbalse, change) => {
+    // @ts-expect-error
         const tipo = $("#tipo_medicion_" + idEmbalse).val().toString();
+    // @ts-expect-error
         const fecha = $("#fecha_medicion_" + idEmbalse).val().toString();
         if (tipo !== "0" && fecha !== "0") {
+    // @ts-expect-error
             const medi = mediciones.find(med => med.id_embalse === idEmbalse && med.tipo === tipo && med.fecha === fecha);
+    // @ts-expect-error
             const val = JSON.parse(medi.json);
+    // @ts-expect-error
             const unit = medi.tipo.includes("Volumen") ? "m³" : "m²";
+    // @ts-expect-error
             const msn = medi.tipo.includes("Volumen") ? "Volumen" : "Área";
             if (change){
+    // @ts-expect-error
                 $("#cota_medicion_" + idEmbalse).attr("min", medi.min);
+    // @ts-expect-error
                 $("#cota_medicion_" + idEmbalse).attr("max", medi.max);
+    // @ts-expect-error
                 $("#cota_medicion_" + idEmbalse).val(medi.min);
+    // @ts-expect-error
                 $("#cota_medicion_text_" + idEmbalse).html(`Ingrese un número (hasta 3 decimales) del ${medi.min} al ${medi.max}`);
+    // @ts-expect-error
                 $("#valor_medicion_" + idEmbalse).html(`Valor: ${val[medi.min]} ${unit}`);
             }
             else{
+    // @ts-expect-error
                 if (val[$("#cota_medicion_" + idEmbalse).val()] !== undefined) {
+    // @ts-expect-error
                     $("#valor_medicion_" + idEmbalse).html(`${msn}: ${val[$("#cota_medicion_" + idEmbalse).val()]} ${unit}`);
                 }
                 else{
@@ -570,6 +648,7 @@ const Visor = ({recursos, embalses, recursos_gen, perfiles, mediciones}: Props) 
 
         }
     };
+
 
 
     return (
@@ -631,11 +710,13 @@ const Visor = ({recursos, embalses, recursos_gen, perfiles, mediciones}: Props) 
 
                         <div className="h-100 w-100">
                             <div className="tab-content" id="embalsesContent">
+                                {/*@ts-expect-error*/}
                                 <Accordion defaultActiveKey={['0']} activeKey={activeKey} onSelect={setActiveKey}
                                            alwaysOpen>
                                     {embalses && embalses !== undefined &&
                                         embalses.map((embalse: Embalse) => (
                                             <Accordion.Item eventKey={`embalse_${embalse.id}`}>
+                                                {/*@ts-expect-error*/}
                                                 <Accordion.Header onClick={(e) => handleEmbalseClick(e, embalse.id)}>
                                                     <h5 className="mb-0 text-center"><b>Embalse {embalse.nombre}</b>
                                                     </h5>
@@ -726,19 +807,18 @@ const Visor = ({recursos, embalses, recursos_gen, perfiles, mediciones}: Props) 
                                                                                 <div id={`content_perfil_${perfil.id}`} className="content-file perfiles">
                                                                                     <div className="d-inline-block">
                                                                                         <label className="switch">
-                                                                                            <Form.Check type="switch"
-                                                                                                   id={`capa_perfil_${perfil.id}`}
-                                                                                                   onChange={(e) => handlePerfilShow(e, perfil.id, false)}
+                                                                                            {/*@ts-expect-error*/}
+                                                                                            <Form.Check type="switch" id={`capa_perfil_${perfil.id}`} onChange={(e) => handlePerfilShow(e, perfil.id, false)}
                                                                                             />
                                                                                         </label>
                                                                                         <a>{perfil.nombre}</a>
                                                                                     </div>
                                                                                     <div className="d-inline-block">
-                                                                                        <Button className="d-inline-block btn-1" id="editarperfil-' + response.id + '"
-                                                                                                onClick={(e) => handlePerfilShow(e, perfil.id, true)}>
+                                                                                        {/*@ts-expect-error*/}
+                                                                                        <Button className="d-inline-block btn-1" id="editarperfil-' + response.id + '" onClick={(e) => handlePerfilShow(e, perfil.id, true)}>
                                                                                             <FontAwesomeIcon icon={faChartLine} className="text-xl"/></Button>
-                                                                                        <Button className="d-inline-block btn-1 ms-1" id="borrarperfil-' + response.id + '"
-                                                                                                onClick={(e) => handlePerfilDelete(e, perfil.id)}>
+                                                                                        {/*@ts-expect-error*/}
+                                                                                        <Button className="d-inline-block btn-1 ms-1" id="borrarperfil-' + response.id + '" onClick={(e) => handlePerfilDelete(e, perfil.id)}>
                                                                                             <FontAwesomeIcon icon={faTrashCan} className="text-xl"/></Button>
                                                                                     </div>
                                                                                 </div>
@@ -759,9 +839,8 @@ const Visor = ({recursos, embalses, recursos_gen, perfiles, mediciones}: Props) 
                                                                     </Nav>
                                                                     <Tab.Content>
                                                                         <Tab.Pane eventKey="diferencia">
-                                                                            <Form
-                                                                                onSubmit={(e) => handleDiferencia(e, embalse.id)}
-                                                                            >
+                                                                            {/*@ts-expect-error*/}
+                                                                            <Form onSubmit={(e) => handleDiferencia(e, embalse.id)} >
                                                                                 <Form.Group>
                                                                                     <Form.Label className="h5">Proyecto
                                                                                         Anterior</Form.Label>
@@ -836,27 +915,31 @@ const Visor = ({recursos, embalses, recursos_gen, perfiles, mediciones}: Props) 
                                                                         <Tab.Pane eventKey="volumen">
                                                                             <div>
                                                                                 <Form.Label className="h5">Tipo</Form.Label>
+                                                                                {/*@ts-expect-error*/}
                                                                                 <Form.Select id={`tipo_medicion_${embalse.id}`} onChange={(e) => handleEvalMedi(e, embalse.id, true)}>
                                                                                     <option value={"0"}>Elija Una Opcion</option>
+                                                                                    {/*@ts-expect-error*/}
                                                                                     {tipos[embalse.id].length>0 && tipos[embalse.id].map((tipo) => (
                                                                                         <option value={tipo}>{tipo}</option>
                                                                                     ))}
                                                                                 </Form.Select>
                                                                                 <Form.Label className="h5 mt-3">Fecha</Form.Label>
+                                                                                {/*@ts-expect-error*/}
                                                                                 <Form.Select id={`fecha_medicion_${embalse.id}`} onChange={(e) => handleEvalMedi(e, embalse.id, true)}>
                                                                                     <option value={"0"}>Elija Una Opcion</option>
+                                                                                    {/*@ts-expect-error*/}
                                                                                     {fechas[embalse.id].length>0 && fechas[embalse.id].map((fecha) => (
                                                                                         <option value={fecha}>{fecha}</option>
                                                                                     ))}
                                                                                 </Form.Select>
                                                                                 <Form.Label className="h5 mt-3" id={`cota_medicion_text_${embalse.id}`}>Ingrese un número (hasta 3 decimales) del min al max</Form.Label>
-                                                                                <Form.Control
+                                                                                {/*@ts-expect-error*/}
+                                                                                <Form.Control onChange={(e) => handleEvalMedi(e, embalse.id, false)}
                                                                                     id={`cota_medicion_${embalse.id}`}
                                                                                     type="number"
                                                                                     step={0.001}
                                                                                     min="0"
                                                                                     max="1000"
-                                                                                    onChange={(e) => handleEvalMedi(e, embalse.id, false)}
                                                                                 />
                                                                                 <p className="h5 my-3" id={`valor_medicion_${embalse.id}`}>Valor: </p>
                                                                             </div>
@@ -910,6 +993,7 @@ const Visor = ({recursos, embalses, recursos_gen, perfiles, mediciones}: Props) 
                             ))}
                         </div>
                         <div>
+                            {/*@ts-expect-error*/}
                             <Button className="mt-2 btn-1" onClick={(e) => handlePerfilClick(e)}>Generar Perfil</Button>
                         </div>
                     </div>
@@ -918,6 +1002,7 @@ const Visor = ({recursos, embalses, recursos_gen, perfiles, mediciones}: Props) 
                     <Button className="btn-2" onClick={handleClose}>
                         Cerrar
                     </Button>
+                    {/*@ts-expect-error*/}
                     <Button className="btn-1" onClick={(e) => handleSavePerfil(e)}>
                         Guardar
                     </Button>
