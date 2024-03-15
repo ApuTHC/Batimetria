@@ -74,7 +74,7 @@ def eval_embalse(data):
                 # Escribe los datos de la diferencia en el nuevo raster
                 dst.write(diferencia_data, 1)
         nombre_layer = name_result.replace('.tif', '')
-        geo = Geoserver('http://54.196.189.69:8080/geoserver', username='admin', password='geoserver')
+        geo = Geoserver('http://3.88.142.9:8080/geoserver', username='admin', password='geoserver')
         # geo = Geoserver('http://127.0.0.1:8080/geoserver', username='admin', password='geoserver')
         geo.create_coveragestore(layer_name=nombre_layer, path=pat_result, workspace='prueba')
         nombre_layer_wms = 'prueba:' + nombre_layer
