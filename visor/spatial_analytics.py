@@ -55,6 +55,8 @@ def eval_embalse(data):
 
             data1 = src1.read(1)
             data2 = src2.read(1)
+            src1.close()
+            src2.close()
 
             # Calcula la diferencia entre los rasters
             diferencia_data = data2 - data1
@@ -68,7 +70,6 @@ def eval_embalse(data):
 
             # Guarda los datos de la diferencia en el perfil del nuevo raster
             profile.update(count=1, dtype=str(diferencia_data.dtype))
-
             # Crea un nuevo archivo raster para la diferencia
             with rasterio.open(pat_result, 'w', **profile) as dst:
                 # Escribe los datos de la diferencia en el nuevo raster
